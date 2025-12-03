@@ -5,9 +5,7 @@
 
 from argparse import ArgumentParser, ArgumentTypeError
 from collections.abc import Generator
-from dataclasses import dataclass, field, InitVar
 from datetime import datetime, MINYEAR, date as dt_date
-from typing import Self
 
 RANDOMORG_START_YEAR = 2006
 RANDOMORG_START_MONTH = 3
@@ -15,53 +13,19 @@ MONTHS = range(1, 13)
 LINK_TEMPLATE = "https://archive.random.org/download?file={}-bin.torrent"
 
 
-@dataclass
-class Date:
-    year: int = field(init=False)
-    month: int = field(init=False)
-    _date: dt_date = field(init=False, repr=False)
-    date: InitVar[str]
-
-    def __post_init__(self, date: str):
-        try:
-            year, month = map(int, date.split("-"))
-        except ValueError:
-            raise ArgumentTypeError(
-                f"Invalid date format: {date}. Use YYYY-MM format."
-            ) from ValueError
-        if month not in MONTHS:
-            raise ArgumentTypeError(
-                f"Month must be between {next(iter(MONTHS))} and {next(reversed(MONTHS))}"
-            )
-        self.year = year
-        self.month = month
-        self._date = dt_date(year, month, 1)
-
-    @classmethod
-    def from_values(cls, year: int, month: int) -> Self:
-        result = cls(f"{year}-{month:02d}")
-        return result
-
-    def __hash__(self) -> int:
-        return self._date.__hash__()
-
-    def __str__(self) -> str:
-        return f"{self.year}-{self.month:02d}"
-
-    def __lt__(self, other: Self) -> bool:
-        return self._date < other._date
-
-    def __le__(self, other: Self) -> bool:
-        return self._date <= other._date
-
-    def __gt__(self, other: Self) -> bool:
-        return self._date > other._date
-
-    def __ge__(self, other: Self) -> bool:
-        return self._date >= other._date
-
-    def __eq__(self, other: Self) -> bool:
-        return self._date == other._date
+def to_date(s: str) -> dt_date:
+    try:
+        year, month = map(int, s.split("-"))
+    except ValueError:
+        raise ArgumentTypeError(
+            f"Invalid date format: {date}. Use YYYY-MM format."
+        ) from ValueError
+    if month not in MONTHS:
+        raise ArgumentTypeError(
+            f"Month must be between {next(iter(MONTHS))} and {next(reversed(MONTHS))}"
+        )
+    result = dt_date(year, month, 1)
+    return result
 
 
 def correct_end_month_and_year_if_in_january(month: int, year: int) -> tuple[int, int]:
@@ -73,7 +37,7 @@ def correct_end_month_and_year_if_in_january(month: int, year: int) -> tuple[int
     return month, year
 
 
-def get_end_date() -> Date:
+def get_end_date() -> dt_date:
     now = datetime.now()
     end_year = now.year
     end_month = now.month
@@ -81,19 +45,19 @@ def get_end_date() -> Date:
     result = end_year, end_month - 1
     result = correct_end_month_and_year_if_in_january(*result)
 
-    end_date = Date.from_values(*result)
+    end_date = dt_date(*result, 1)
 
     return end_date
 
 
-def downloadable_dates(start_date: Date, end_date: Date) -> Generator[Date]:
-    randomorg_start = Date.from_values(RANDOMORG_START_YEAR, RANDOMORG_START_MONTH)
+def downloadable_dates(start_date: date, end_date: date) -> Generator[dt_date]:
+    randomorg_start = dt_date(RANDOMORG_START_YEAR, RANDOMORG_START_MONTH, 1)
 
     start_year = start_date.year
     end_year = end_date.year
 
     all_dates = (
-        Date.from_values(year, month)
+        dt_date(year, month, 1)
         for year in range(start_year, end_year + 1)
         for month in MONTHS
     )
@@ -112,19 +76,19 @@ def downloadable_dates(start_date: Date, end_date: Date) -> Generator[Date]:
 
 
 def dates_to_download(
-    start_date: Date, end_date: Date | None = None
-) -> Generator[Date]:
+    start_date: date, end_date: dt_date | None = None
+) -> Generator[dt_date]:
     if end_date is None:
         end_date = get_end_date()
 
     yield from downloadable_dates(start_date, end_date)
 
 
-def torrent_link(date: Date) -> str:
+def torrent_link(date: dt_date) -> str:
     return LINK_TEMPLATE.format(date)
 
 
-def validate_date(date: Date) -> None:
+def validate_date(date: dt_date) -> None:
     now = datetime.now()
     if start_date.year >= now.year and start_date.month >= now.month:
         raise ValueError("This month's torrent is not yet available")
@@ -137,7 +101,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "start_date",
-        type=Date,
+        type=to_date,
         nargs="?",
         default=f"{RANDOMORG_START_YEAR}-{RANDOMORG_START_MONTH:02d}",
         help="date with which you would like to start (default: %(default)s)",
