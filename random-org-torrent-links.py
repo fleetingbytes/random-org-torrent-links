@@ -6,8 +6,7 @@ from argparse import ArgumentParser, ArgumentTypeError
 from calendar import Month as Months
 from collections.abc import Generator
 from datetime import date, datetime, timedelta
-from sys import stderr, exit
-
+from sys import exit, stderr
 
 SEPARATOR = "-"
 BRIEF_DATE_FORMAT = f"%Y{SEPARATOR}%m"
