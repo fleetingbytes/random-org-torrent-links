@@ -65,26 +65,16 @@ def get_end_date() -> date:
 
 
 def downloadable_dates(start_date: date, end_date: date) -> Generator[date]:
-    start_year = (
-        start_date.year
-        if start_date.year >= RANDOMORG_START.year
-        else RANDOMORG_START.year
-    )
+    start_date = max(start_date, RANDOMORG_START)
     end_year = end_date.year
 
     all_dates = (
         date(year, month, FIRST_DAY_OF_MONTH)
-        for year in range(start_year, end_year + 1)
+        for year in range(start_date.year, end_year + 1)
         for month in Months
     )
 
-    dates_since_randomorg_start = filter(
-        lambda date: date >= RANDOMORG_START, all_dates
-    )
-
-    dates_since_start_date = filter(
-        lambda date: date >= start_date, dates_since_randomorg_start
-    )
+    dates_since_start_date = filter(lambda date: date >= start_date, all_dates)
 
     dates_until_end = filter(lambda date: date <= end_date, dates_since_start_date)
 
@@ -100,7 +90,8 @@ def dates_to_download(
     yield from downloadable_dates(start_date, end_date)
 
 
-def torrent_link(year_and_month: date) -> str:
+def torrent_link(some_date: date) -> str:
+    year_and_month: str = some_date.strftime(BRIEF_DATE_FORMAT)
     return LINK_TEMPLATE.format(year_and_month)
 
 
