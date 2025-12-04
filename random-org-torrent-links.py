@@ -9,27 +9,35 @@ from datetime import date, datetime, timedelta
 from sys import stderr, exit
 
 
+SEPARATOR = "-"
+BRIEF_DATE_FORMAT = f"%Y{SEPARATOR}%m"
+FULL_DATE_FORMAT = f"{BRIEF_DATE_FORMAT}{SEPARATOR}%d"
+
 FIRST_DAY_OF_MONTH = 1
-ERROR_INCORRECT_START_DATE = 1
 RANDOMORG_START = date(2006, 3, FIRST_DAY_OF_MONTH)
+
 LINK_TEMPLATE = "https://archive.random.org/download?file={}-bin.torrent"
+
+ERROR_INCORRECT_START_DATE = 1
 
 
 def to_date(year_and_month: str) -> date:
     try:
-        year_month_day = f"{year_and_month}-{FIRST_DAY_OF_MONTH:02d}"
-        result = date.strptime(year_month_day, "%Y-%m-%d")
+        year_month_day = f"{year_and_month}{SEPARATOR}{FIRST_DAY_OF_MONTH:02d}"
+        result = date.strptime(year_month_day, FULL_DATE_FORMAT)
         return result
     except ValueError as exc:
         raise ArgumentTypeError(
-            f'Invalid date format: "{year_and_month}". Use YYYY-MM format.'
+            f'Invalid date format: "{year_and_month}". Use YYYY{SEPARATOR}MM format.'
         ) from exc
 
 
 def validate_date(given_date: date) -> None:
     now = datetime.now()
     if given_date.year >= now.year and given_date.month >= now.month:
-        raise ValueError(f"Torrent for {now.strftime('%Y-%m')} is not yet available.")
+        raise ValueError(
+            f"Torrent for {now.strftime(BRIEF_DATE_FORMAT)} is not yet available."
+        )
 
 
 def exit_if_incorrect(start_date: date) -> None:
@@ -105,7 +113,7 @@ if __name__ == "__main__":
         "start_date",
         type=to_date,
         nargs="?",
-        default=RANDOMORG_START.strftime("%Y-%m"),
+        default=RANDOMORG_START.strftime(BRIEF_DATE_FORMAT),
         help="date with which you would like to start (default: %(default)s)",
     )
 
