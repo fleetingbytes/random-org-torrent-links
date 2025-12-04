@@ -35,9 +35,7 @@ def to_date(year_and_month: str) -> date:
 def validate_date(given_date: date) -> None:
     now = datetime.now()
     if given_date.year >= now.year and given_date.month >= now.month:
-        raise ValueError(
-            f"Torrent for {now.strftime(BRIEF_DATE_FORMAT)} is not yet available."
-        )
+        raise ValueError(f"Torrent for {now.strftime(BRIEF_DATE_FORMAT)} is not yet available.")
 
 
 def exit_if_incorrect(start_date: date) -> None:
@@ -59,18 +57,20 @@ def get_previous_month(now: date) -> date:
 def get_end_date() -> date:
     now = datetime.now()
     now = date(now.year, now.month, now.day)
-    end_date = get_previous_month(now)
+    end_date: date = get_previous_month(now)
 
     return end_date
 
 
 def downloadable_dates(start_date: date, end_date: date) -> Generator[date]:
     start_date = max(start_date, RANDOMORG_START)
+
+    start_year = start_date.year
     end_year = end_date.year
 
     all_dates = (
         date(year, month, FIRST_DAY_OF_MONTH)
-        for year in range(start_date.year, end_year + 1)
+        for year in range(start_year, end_year + 1)
         for month in Months
     )
 
@@ -81,9 +81,7 @@ def downloadable_dates(start_date: date, end_date: date) -> Generator[date]:
     yield from dates_until_end
 
 
-def dates_to_download(
-    start_date: date, end_date: date | None = None
-) -> Generator[date]:
+def dates_to_download(start_date: date, end_date: date | None = None) -> Generator[date]:
     if end_date is None:
         end_date = get_end_date()
 
