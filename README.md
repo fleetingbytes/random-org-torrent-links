@@ -14,8 +14,14 @@ https://archive.random.org/download?file=2006-05-bin.torrent
 ...
 ```
 
-If you are only interested in a few recent ones, use the positional argument start_date. The script will output the links
-from the corresponding month's archive onward until the most recent one:
+If you are only interested in the most recent ones, pipe it to `tail` (where with `-n` you specify how many of the most recent ones you want)
+
+```sh
+$ ./random-org-torrent-links | tail -n 1
+https://archive.random.org/download?file=2026-10-bin.torrent
+```
+
+You can also use a positional argument (in `%Y-%m` format) to start the listing from a specific date:
 
 ```sh
 $ ./random-org-torrent-links 2024-12
